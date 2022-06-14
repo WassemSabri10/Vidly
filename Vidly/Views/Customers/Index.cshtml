@@ -1,0 +1,82 @@
+﻿@model IEnumerable<Vidly.Models.Customer>
+@{
+    ViewBag.Title = "Customers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Customers</h2>
+@*<h3><a href="#link" class="btn btn-info" role="button">New Customer</a></h3>*@
+<h3>
+    @Html.ActionLink("New Customer", "New", "Customers", null, new { @class = "btn btn-primary btn-xm" })
+</h3>
+
+<table id="customers" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Customer</th>
+            <th>MembershipType</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+@*Now we use jQuery to handle the button click event and call the API to remove the customer*@
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+
+            //Feed our datatable with the api data
+            var table = $("#customers").DataTable({
+                ajax: {
+                    url: "/api/customers",
+                    dataSrc: ""
+                },
+                columns:
+                    [
+                        {
+                            data: "name",
+                            render: function (data, type, customer) {
+                                return "<a herf='/customers/edit/" + customer.id + "'>" + customer.name + "</a>";
+                            }
+                        },
+                        {
+                            data: "membershipType.typeOfMemberShip"
+                        },
+                        {
+                            data: "id",
+                            render: function (data) {
+                                return "<button class='btn-link js-delete' data-customer-id=" + data + ">Delete</button>";
+                            }
+                        }
+                    ]
+            });
+            $("#customers").on("click", ".js-delete", function () {
+                var button = $(this);
+
+                //here I am going to add the bootbox confirmation style which doesn't take boolean but it takes a callback result
+
+                bootbox.confirm("are you sure you want to delete this customer?", function (result) {
+                    if (result) {
+                        $.ajax({
+                            //Get the id in the url
+                            url: "/api/customers/" + button.attr("data-customer-id"),
+                            //next we need to set the method
+                            method: "DELETE",
+                            //Finally let's have a call back function to tell me that the function happened successfully
+                            success: function () {
+                                //console.log("Success");
+                                table.row(button.parents("tr")).remove().draw();
+                            }
+                        });
+                    }
+                });
+
+            });
+
+        });
+    </script>
+}
